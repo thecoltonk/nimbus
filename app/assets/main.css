@@ -25,12 +25,8 @@ a,
 
 @media (hover: hover) {
   a:hover {
-    background-color: rgba(136, 57, 239, 0.1);
+    background-color: rgba(37, 99, 235, 0.14);
   }
-}
-
-.dark a:hover {
-  background-color: var(--btn-hover);
 }
 
 /* Add dark mode styles for the app */

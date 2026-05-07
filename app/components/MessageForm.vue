@@ -12,11 +12,8 @@ import {
 } from "reka-ui";
 import { useWindowSize, onKeyStroke, useMagicKeys } from "@vueuse/core";
 import Logo from "./Logo.vue";
-import ModelSelectorPopover from "./ModelSelectorPopover.vue";
 import BottomSheetModelSelector from "./BottomSheetModelSelector.vue";
 import { useAttachments } from "~/composables/useAttachments";
-import { useModels } from "~/composables/useModels";
-import DEFAULT_PARAMETERS from '~/composables/defaultParameters';
 import { 
   findModelById, 
   showReasoningToggle, 
@@ -72,21 +69,12 @@ const {
 // Computed property to check if the input is empty (after trimming whitespace)
 const trimmedMessage = computed(() => inputMessage.value.trim());
 
-// Dynamic models
-const { models: dynamicModels, getModelById: getDynamicModelById } = useModels();
-
 // Computed property to get the selected model object
 const selectedModel = computed(() => {
-  if (!props.selectedModelId) return null;
+  if (!props.selectedModelId || !props.availableModels) return null;
 
-  // Try dynamic models first, then fall back to hardcoded
-  const dynamic = getDynamicModelById(props.selectedModelId);
-  if (dynamic) return dynamic;
 
-  if (props.availableModels) {
-    return findModelById(props.availableModels, props.selectedModelId);
-  }
-  return null;
+  return findModelById(props.availableModels, props.selectedModelId);
 });
 
 // Computed property to check if the current model supports vision (image attachments)
@@ -160,6 +148,7 @@ const isSearchEnabled = computed({
   }
 });
 
+
 // Watch the selected model and load the appropriate reasoning effort setting
 watch(
   () => [props.selectedModelId, props.settingsManager?.settings?.model_settings],
@@ -173,6 +162,17 @@ watch(
       } else {
         reasoningEffort.value = "default";
       }
+    }
+  },
+  { immediate: true }
+);
+
+// Watch for search_enabled setting changes
+watch(
+  () => props.settingsManager?.settings?.search_enabled,
+  (newValue) => {
+    if (newValue !== undefined) {
+      searchEnabled.value = newValue;
     }
   },
   { immediate: true }
@@ -565,7 +565,7 @@ defineExpose({ setMessage, toggleReasoning, setReasoningEffort, toggleSearch, $e
         @paste="handlePaste"
         @focus="isFocused = true"
         @blur="isFocused = false"
-        placeholder="Type your message here..."
+        placeholder="Type your message..." 
         class="chat-textarea" 
         rows="1"
       ></textarea>
@@ -711,17 +711,17 @@ defineExpose({ setMessage, toggleReasoning, setReasoningEffort, toggleSearch, $e
 
         <!-- Right aligned actions -->
         <div class="right-actions">
-          <!-- Model Selector Popover (all screen sizes) -->
-          <ModelSelectorPopover
-            :selected-model-id="props.selectedModelId"
-            :selected-model-name="props.selectedModelName"
-            @model-selected="handleModelSelect"
-          />
+          <!-- Mobile Model Selector Button -->
+          <button v-if="isMobile" type="button" class="feature-button model-selector-mobile-btn"
+            @click="openBottomSheet" :aria-label="`Change model, currently ${props.selectedModelName}`">
+            <Logo v-if="selectedModelLogo" :src="selectedModelLogo" :size="18" class="logo-inline" />
+            <span class="model-name-truncate">{{ props.selectedModelName }}</span>
+          </button>
 
           <button type="submit" class="action-btn send-btn" :disabled="!trimmedMessage && !isLoading"
             @click="handleActionClick" :aria-label="isLoading ? 'Stop generation' : 'Send message'">
-            <Icon v-if="!isLoading" icon="material-symbols:arrow-upward-rounded" width="20" height="20" />
-            <Icon v-else icon="material-symbols:stop-rounded" width="20" height="20" />
+            <Icon v-if="!isLoading" icon="material-symbols:arrow-upward-rounded" width="22" height="22" />
+            <Icon v-else icon="material-symbols:stop-rounded" width="22" height="22" />
           </button>
         </div>
       </div>
@@ -760,15 +760,11 @@ defineExpose({ setMessage, toggleReasoning, setReasoningEffort, toggleSearch, $e
   background-color: var(--bg-input);
   border: 1px solid var(--border);
   border-radius: 16px;
-  padding: 4px 8px 8px;
+  padding: 8px;
   box-shadow: var(--shadow-default);
   position: relative;
   z-index: 10;
   transition: border-color 0.2s ease, background-color 0.2s ease;
-}
-
-.input-area-wrapper:focus-within {
-  border-color: rgba(212, 69, 117, 0.25);
 }
 
 .input-area-wrapper.drag-over {
@@ -830,27 +826,6 @@ defineExpose({ setMessage, toggleReasoning, setReasoningEffort, toggleSearch, $e
   transform: none;
 }
 
-/* Dark mode send button — GitHub blue */
-:global(.dark) .send-btn:not(:disabled) {
-  background-color: #1f6feb;
-  color: #f0f6fc;
-}
-
-:global(.dark) .send-btn:hover:not(:disabled) {
-  background-color: #388bfd;
-}
-
-/* Feature active state (search enabled) */
-.feature-active {
-  background-color: var(--primary) !important;
-  color: var(--primary-foreground) !important;
-  border-color: var(--primary) !important;
-}
-
-.feature-label {
-  font-size: 13px;
-}
-
 .send-btn:disabled .icon-send {
   stroke: var(--btn-send-text);
   opacity: 0.7;
@@ -863,26 +838,20 @@ defineExpose({ setMessage, toggleReasoning, setReasoningEffort, toggleSearch, $e
   justify-content: center;
   gap: 6px;
   border-radius: 8px;
-  padding: 0 10px;
-  color: var(--text-secondary);
-  background: transparent;
+
+  color: var(--btn-model-selector-text);
   border: 1px solid var(--border);
   cursor: pointer;
   flex-shrink: 0;
   font-weight: 500;
   font-size: 13px;
-  transition: all 0.18s ease;
-  height: 32px;
+  transition: all 0.2s ease;
+  height: 36px;
   margin: 0;
 }
 
 .feature-button:hover:not(:disabled) {
-  color: var(--text-primary);
-  background-color: var(--btn-hover);
-}
-
-.search-btn {
-  padding: 0 10px;
+  background-color: var(--btn-model-selector-hover-bg);
 }
 
 .search-toggle-btn.search-enabled {

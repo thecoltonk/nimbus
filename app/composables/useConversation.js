@@ -1,6 +1,6 @@
 import { ref, computed, onMounted, watch, toRaw } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { useHead } from '#imports';
+import { useHead } from '@unhead/vue';
 import { createConversation as storeCreateConversation } from './storeConversations';
 import { useSettings } from './useSettings';
 import { useMessagesManager } from './messagesManager';
@@ -18,7 +18,7 @@ export function useConversation() {
 
   // Create a new messages manager for this page
   const chatPanel = ref(null);
-  const messagesManager = useMessagesManager(chatPanel);
+  const messagesManager = useMessagesManager(settingsManager, chatPanel);
 
   // Destructure commonly used properties from messagesManager
   const {
@@ -109,7 +109,7 @@ export function useConversation() {
 
     // Create the conversation in storage with this message - using the storeConversations function
     // Use toRaw to ensure we're not sending a Proxy to IndexedDB
-    const conversationId = await storeCreateConversation(toRaw(messages.value), new Date(), settingsManager.settings.custom_api_key || '');
+    const conversationId = await storeCreateConversation(toRaw(messages.value), new Date());
 
     // Update current conversation to point to the new one
     currConvo.value = conversationId;

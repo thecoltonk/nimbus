@@ -84,9 +84,9 @@ function handleNewConversation() {
         <button class="close-button" aria-label="Close sidebar" @click="closeSidebar">
           <Icon icon="material-symbols:side-navigation" width="24" height="24" />
         </button>
-        <span class="sidebar-title">Nimbus</span>
+        <span class="sidebar-title">Chats</span>
         <button class="settings-button" aria-label="Open settings" @click="$emit('openSettings')">
-          <Icon icon="material-symbols:settings-outline" width="22" height="22" />
+          <Icon icon="material-symbols:settings" width="24" height="24" />
         </button>
       </div>
       <button id="new-chat-button" class="new-chat-btn" @click="handleNewConversation">
@@ -100,7 +100,7 @@ function handleNewConversation() {
           v-model="searchQuery"
           type="text"
           class="search-input"
-          placeholder="Search your threads..."
+          placeholder="Search conversations..."
         />
         <button
           v-if="searchQuery"
@@ -112,7 +112,7 @@ function handleNewConversation() {
         </button>
       </div>
       
-      <div class="main-content" style="padding-bottom: 0;">
+      <div class="main-content">
         <!-- Empty state when no conversations -->
         <div v-if="!metadata.length" class="empty-state">
           <Icon icon="material-symbols:chat-bubble-outline" width="48" height="48" />
@@ -213,6 +213,7 @@ function handleNewConversation() {
           </template>
         </div>
       </div>
+      
       <!-- API Key Warning -->
       <div v-if="!hasApiKey" class="api-key-warning">
         <Icon icon="material-symbols:warning" width="20" height="20" />
@@ -222,13 +223,6 @@ function handleNewConversation() {
         </div>
         <button class="warning-button" @click="$emit('openSettings')" aria-label="Open settings">
           <Icon icon="material-symbols:arrow-forward" width="18" height="18" />
-        </button>
-      </div>
-
-      <div class="sidebar-footer">
-        <button class="login-btn">
-          <Icon icon="material-symbols:login-rounded" width="18" height="18" />
-          <span>Login</span>
         </button>
       </div>
     </div>
@@ -261,7 +255,7 @@ function handleNewConversation() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 48px;
+  height: 60px;
   color: var(--text-primary);
   padding: 0 8px;
   position: relative;
@@ -269,46 +263,37 @@ function handleNewConversation() {
 }
 
 .sidebar-title {
-  font-family: "Plus Jakarta Sans", sans-serif;
-  font-size: 1.05em;
-  font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: -0.01em;
+  font-family: "Inter", sans-serif;
+  font-size: 1.1em;
+  font-weight: 600;
+  color: inherit;
 }
 
 #new-chat-button {
-  margin: 12px 16px 12px 16px;
+  margin: 16px 16px 12px 16px;
   width: calc(100% - 32px);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: var(--primary);
-  color: var(--primary-foreground);
+  background: linear-gradient(to right, #2563eb, #7c3aed);
+  color: #ffffff;
   border: none;
   border-radius: 8px;
-  height: 38px;
+  height: 36px;
   padding: 0;
-  font-size: 0.95em;
+  font-size: 1em;
   font-weight: 600;
   transition:
-    background 0.18s,
-    box-shadow 0.18s;
+    opacity 0.18s,
+    box-shadow 0.18s,
+    transform 0.15s;
   flex-shrink: 0;
 }
 
 #new-chat-button:hover {
-  background: var(--primary-600);
-}
-
-/* GitHub-blue in dark mode */
-.dark #new-chat-button {
-  background: #1f6feb;
-  color: #f0f6fc;
-}
-
-.dark #new-chat-button:hover {
-  background: #388bfd;
+  background: linear-gradient(to right, #1d4ed8, #6d28d9);
+  transform: scale(1.03);
 }
 
 /* Search Container */
@@ -375,37 +360,7 @@ function handleNewConversation() {
   flex: 1 1 0;
   overflow-y: auto;
   padding: 0 16px;
-  margin-bottom: 0;
-}
-
-/* Sidebar Footer */
-.sidebar-footer {
-  padding: 12px 16px 16px;
-  flex-shrink: 0;
-  border-top: 1px solid var(--border);
-}
-
-.login-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 8px 10px;
-  background: transparent;
-  border: none;
-  border-radius: 8px;
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-  font-family: inherit;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-  text-align: left;
-}
-
-.login-btn:hover {
-  background: var(--btn-hover);
-  color: var(--text-primary);
+  margin-bottom: 12px;
 }
 
 /* Empty State */
@@ -454,10 +409,10 @@ function handleNewConversation() {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.75em;
-  font-weight: 600;
-  text-transform: none;
-  letter-spacing: 0;
+  font-size: 0.7em;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   color: var(--text-muted);
   user-select: none;
 }
@@ -528,28 +483,18 @@ function handleNewConversation() {
 }
 
 .conversation-button:hover {
-  background: var(--btn-hover);
-  color: var(--text-primary);
+  background: var(--btn-hover-2);
+  color: var(--primary);
 }
 
 .conversation-button.active {
   background: var(--btn-hover-2);
   color: var(--primary);
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .dark .conversation-button {
   color: var(--text-secondary);
-}
-
-.dark .conversation-button:hover {
-  background: hsla(250, 18%, 55%, 0.12);
-  color: var(--text-primary);
-}
-
-.dark .conversation-button.active {
-  background: hsla(212, 100%, 70%, 0.1);
-  color: var(--primary);
 }
 
 /* Rename input */

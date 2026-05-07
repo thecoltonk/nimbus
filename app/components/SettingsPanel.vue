@@ -147,7 +147,8 @@ function openNotebook() {
 </script>
 
 <template>
-  <div class="settings-panel" v-if="isOpen">
+  <div class="settings-overlay" v-if="isOpen" @click.self="closeSettings">
+    <div class="settings-panel">
       <!-- Header -->
       <div class="panel-header">
         <div class="header-content">
@@ -274,8 +275,8 @@ function openNotebook() {
             <div class="settings-content">
               <div class="content-header">
                 <h2>Notebook (Preview)</h2>
-                <p>Your Notebook is a document that Libre maintains about you. It contains observations 
-                  about your personality, communication style, ongoing projects, and recent activity, all stored on your device. It is used to give Libre context about you.</p>
+                <p>Your Notebook is a document that Nimbus maintains about you. It contains observations
+                  about your personality, communication style, ongoing projects, and recent activity, all stored on your device. It is used to give Nimbus context about you.</p>
               </div>
 
               <div class="setting-item">
@@ -403,12 +404,12 @@ function openNotebook() {
             <div class="settings-content">
               <div class="content-header">
                 <h2>About</h2>
-                <p>Information about Nimbus</p>
+                <p>Information about Cloudsail Nimbus</p>
               </div>
               <div class="info-section">
                 <p>
-                  Nimbus is a modern, Nuxt-powered interface designed for seamless AI interactions. 
-                  Built with developers in mind, it offers a customizable experience that adapts to your needs.
+                  Nimbus by Cloudsail is a modern, Nuxt-powered AI interface designed for seamless interactions.
+                  Built with a focus on clarity and elegance, it adapts to your workflow and preferences.
                 </p>
                 <p>
                   Features include:
@@ -418,12 +419,8 @@ function openNotebook() {
                   <li>Customizable user preferences</li>
                   <li>Persistent memory management</li>
                   <li>Dark/light mode support</li>
-                  <li>Hack Club API integration</li>
+                  <li>Multi-provider model support via OpenRouter</li>
                 </ul>
-                <p>
-                  For more information, visit our 
-                  <a href="https://github.com/cloudsail/nimbus" target="_blank" rel="noopener noreferrer">Nimbus GitHub repository</a>.
-                </p>
               </div>
             </div>
           </div>
@@ -438,16 +435,32 @@ function openNotebook() {
         </div>
       </div>
     </div>
+  </div>
 </template>
 
 <style scoped>
+.settings-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 1rem;
+}
+
 .settings-panel {
   background: var(--bg-primary);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
   width: 100%;
-  max-height: 90vh;
+  max-width: 900px;
+  height: 90vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  border: 1px solid var(--border);
 }
 
 
@@ -636,7 +649,7 @@ function openNotebook() {
 .custom-textarea:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 2px var(--primary-a2);
+  box-shadow: 0 0 0 2px var(--focus-ring);
 }
 
 /* API Key Input */
@@ -896,13 +909,13 @@ function openNotebook() {
 }
 
 .view-notebook-btn {
-  background: var(--primary);
-  color: var(--primary-foreground);
+  background: linear-gradient(to right, #2563eb, #7c3aed);
+  color: #ffffff;
   border: none;
 }
 
 .view-notebook-btn:hover {
-  background: var(--primary-600);
+  background: linear-gradient(to right, #1d4ed8, #6d28d9);
 }
 
 .clear-notebook-btn {
@@ -983,13 +996,13 @@ function openNotebook() {
 }
 
 .save-btn {
-  background: var(--primary);
-  color: var(--primary-foreground);
+  background: linear-gradient(to right, #2563eb, #7c3aed);
+  color: #ffffff;
   border: none;
 }
 
 .save-btn:hover {
-  background: var(--primary-600);
+  background: linear-gradient(to right, #1d4ed8, #6d28d9);
 }
 
 /* Keybinds Styling */
@@ -1095,8 +1108,20 @@ kbd {
   }
 
   .settings-panel {
+    height: 100dvh;
+  }
+
+  .settings-overlay {
+    padding: 0;
+    align-items: stretch;
+    justify-content: stretch;
+  }
+
+  .settings-panel {
     max-width: 100vw;
-    max-height: 100dvh;
+    height: 100dvh;
+    border-radius: 0;
+    box-shadow: none;
   }
 
   .settings-content {

@@ -4,7 +4,6 @@ import { migrateMessages } from "./branchManager";
 import { getSessionToken } from "~/composables/useSession";
 import { useSettings } from "~/composables/useSettings";
 import { deleteChatSummary } from "./chatSummarizer";
-import { useCloudSync } from "~/composables/useCloudSync";
 
 /**
  * Serializes a message object for storage, removing Vue reactivity proxies
@@ -61,7 +60,7 @@ function serializeMessage(msg) {
   return baseMessage;
 }
 
-export async function createConversation(plainMessages, lastUpdated, customApiKey = '') {
+export async function createConversation(plainMessages, lastUpdated) {
   const conversationId = crypto.randomUUID();
   const rawMessages = plainMessages.map(serializeMessage);
   const title = "Untitled";
@@ -76,21 +75,13 @@ export async function createConversation(plainMessages, lastUpdated, customApiKe
 
     const metadata =
       (await localforage.getItem("conversations_metadata")) || [];
-    metadata.push({ id: conversationId, title, lastUpdated, createdAt: lastUpdated });
+    metadata.push({ id: conversationId, title, lastUpdated });
     await localforage.setItem("conversations_metadata", metadata);
 
     emitter.emit("updateConversations");
     console.log("Conversation saved successfully with Untitled title!");
 
-    // Sync to cloud in background
-    const { cloudCreateConversation } = useCloudSync();
-    cloudCreateConversation(conversationId, {
-      title,
-      messages: rawMessages,
-      branchPath: [],
-    });
-
-    generateTitleInBackground(conversationId, plainMessages, lastUpdated, customApiKey);
+    generateTitleInBackground(conversationId, plainMessages, lastUpdated);
 
     return conversationId;
   } catch (error) {
@@ -98,7 +89,7 @@ export async function createConversation(plainMessages, lastUpdated, customApiKe
   }
 }
 
-async function generateTitleInBackground(conversationId, plainMessages, lastUpdated, customApiKey = '') {
+async function generateTitleInBackground(conversationId, plainMessages, lastUpdated) {
   const systemPrompt = `You are an AI with the task of shortening and summarising messages into a short title. You must summarise the given messages based on their content into at most a 40 character title. Each conversation is between a user and an AI chatbot. The messages provided to you are the first messages of the conversation. The title must be general enough to apply to what you think the conversation will be about. Only output the title, without any additional explainations or commentary.`;
 
   try {
@@ -123,7 +114,7 @@ async function generateTitleInBackground(conversationId, plainMessages, lastUpda
           { role: "system", content: systemPrompt },
           ...plainMessages.map((msg) => ({
             role: msg.role,
-            content: typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content),
+            content: msg.content,
           })),
         ],
         model: "z-ai/glm-4.7-flash",
@@ -168,10 +159,6 @@ async function generateTitleInBackground(conversationId, plainMessages, lastUpda
       emitter.emit("updateConversations");
       emitter.emit("conversationTitleUpdated", { conversationId, title: newTitle });
       console.log(`Title updated for conversation ${conversationId}: ${newTitle}`);
-
-      // Sync title update to cloud
-      const { syncConversation } = useCloudSync();
-      syncConversation(conversationId, conversation);
     }
   } catch (error) {
     console.error("Error generating title in background:", error);
@@ -206,14 +193,6 @@ export async function storeMessages(
   updatedMetadata.push({ id: conversationId, title, lastUpdated });
   await localforage.setItem("conversations_metadata", updatedMetadata);
 
-  // Sync to cloud in background
-  const { syncConversation } = useCloudSync();
-  syncConversation(conversationId, {
-    title,
-    messages: rawMessages,
-    branchPath,
-  });
-
   console.log("Conversation saved successfully!");
 }
 
@@ -228,10 +207,6 @@ export async function deleteConversation(conversationId) {
   const metadata = (await localforage.getItem("conversations_metadata")) || [];
   const updatedMetadata = metadata.filter((m) => m.id !== conversationId);
   await localforage.setItem("conversations_metadata", updatedMetadata);
-
-  // Sync deletion to cloud
-  const { cloudDeleteConversation } = useCloudSync();
-  cloudDeleteConversation(conversationId);
 
   // Emit an event so that the sidebar updates its list.
   emitter.emit("updateConversations");

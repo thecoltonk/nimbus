@@ -18,20 +18,22 @@ const props = defineProps({
 
 const svgContainerRef = ref(null);
 
-const FALLBACK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 8h-1V6c0-2.76-2.24-5-5-5S8 3.24 8 6v2H7c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-9-2c0-1.66 1.34-3 3-3s3 1.34 3 3v2h-6V6zm9 14H7V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/></svg>`;
-
 const loadSvgContent = async () => {
-  if (!svgContainerRef.value) return;
-  try {
-    const response = await fetch(props.src);
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const svgContent = await response.text();
-    if (svgContainerRef.value) {
-      svgContainerRef.value.innerHTML = svgContent;
-    }
-  } catch {
-    if (svgContainerRef.value) {
-      svgContainerRef.value.innerHTML = FALLBACK_SVG;
+  if (svgContainerRef.value) {
+    try {
+      const response = await fetch(props.src);
+      let svgContent = await response.text();
+
+      // The SVGs already use fill="currentColor", so just make sure we preserve this
+      // and don't add unnecessary stroke attributes
+      if (svgContainerRef.value) {  // Double-check it still exists
+        svgContainerRef.value.innerHTML = svgContent;
+      }
+    } catch (error) {
+      console.error('Error loading SVG:', error);
+      if (svgContainerRef.value) {  // Double-check it still exists
+        svgContainerRef.value.innerHTML = '<svg></svg>'; // Fallback
+      }
     }
   }
 };

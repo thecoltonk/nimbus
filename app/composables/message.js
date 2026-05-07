@@ -1,6 +1,6 @@
 /**
  * @file message.js
- * @description Core logic for the Nimbus API Interface, handling Hack Club LLM endpoint configuration
+ * @description Core logic for the Nimbus API Interface, handling LLM endpoint configuration
  * and streaming responses using manual fetch() processing.
  * 
  * Tool Calling Architecture (Industry Standard):
@@ -15,7 +15,6 @@ import {
   DEFAULT_MODEL_ID,
   buildReasoningParams,
 } from "~/composables/availableModels";
-import { useModels } from "~/composables/useModels";
 import { generateSystemPrompt } from "~/composables/systemPrompt";
 import { toolManager } from "~/composables/toolsManager";
 import { getSessionToken } from "~/composables/useSession";
@@ -424,12 +423,8 @@ export async function* handleIncomingMessage(
       // We'll continue anyway, in case it was just the health check endpoint failing
     }
 
-    // Find the selected model info (check hardcoded first, then dynamic)
-    let selectedModelInfo = findModelById(availableModels, selectedModel);
-    if (!selectedModelInfo) {
-      const { getModelById } = useModels();
-      selectedModelInfo = getModelById(selectedModel);
-    }
+    // Find the selected model info
+    const selectedModelInfo = findModelById(availableModels, selectedModel);
 
     // Determine which tools are actually being used
     const modelHasToolUse = selectedModelInfo?.tool_use !== false;

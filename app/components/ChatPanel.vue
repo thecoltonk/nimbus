@@ -579,42 +579,7 @@ defineExpose({ scrollToEnd, isAtBottom, chatWrapper });
   <div class="chat-wrapper" ref="chatWrapper">
     <div class="chat-container">
       <div v-if="messages.length < 1 && showWelcome" class="welcome-container">
-        <h1 v-if="!isIncognito" class="welcome-message">How can I help you?</h1>
-        <div v-if="!isIncognito" class="suggestion-chips">
-          <button class="suggestion-chip" @click="emit('set-message', 'Help me create something new and interesting')">
-            <Icon icon="material-symbols:auto-fix-high-outline" width="16" height="16" />
-            <span>Create</span>
-          </button>
-          <button class="suggestion-chip" @click="emit('set-message', 'Help me explore a topic I\'m curious about')">
-            <Icon icon="material-symbols:travel-explore" width="16" height="16" />
-            <span>Explore</span>
-          </button>
-          <button class="suggestion-chip" @click="emit('set-message', 'Help me write or debug some code')">
-            <Icon icon="material-symbols:code" width="16" height="16" />
-            <span>Code</span>
-          </button>
-          <button class="suggestion-chip" @click="emit('set-message', 'Help me learn something new today')">
-            <Icon icon="material-symbols:school-outline" width="16" height="16" />
-            <span>Learn</span>
-          </button>
-        </div>
-        <div v-if="!isIncognito" class="example-questions">
-          <button class="example-question" @click="emit('set-message', 'How does AI actually work?')">
-            <span>How does AI actually work?</span>
-          </button>
-          <div class="example-divider"></div>
-          <button class="example-question" @click="emit('set-message', 'Are black holes real?')">
-            <span>Are black holes real?</span>
-          </button>
-          <div class="example-divider"></div>
-          <button class="example-question" @click="emit('set-message', 'How many Rs are in the word &quot;strawberry&quot;?')">
-            <span>How many Rs are in the word "strawberry"?</span>
-          </button>
-          <div class="example-divider"></div>
-          <button class="example-question" @click="emit('set-message', 'What is the meaning of life?')">
-            <span>What is the meaning of life?</span>
-          </button>
-        </div>
+        <h1 v-if="!isIncognito" class="welcome-message">What do you need help with?</h1>
         <div v-else class="incognito-welcome">
           <h1 class="incognito-title">Incognito Mode</h1>
           <p class="incognito-description">
@@ -824,8 +789,8 @@ defineExpose({ scrollToEnd, isAtBottom, chatWrapper });
 
 <style>
 .chat-wrapper {
-  --bubble-user-bg: var(--color-bubble-user-bg, var(--primary));
-  --bubble-user-text: var(--color-bubble-user-text, var(--primary-foreground));
+  --bubble-user-bg: var(--primary);
+  --bubble-user-text: var(--primary-foreground);
   --text-primary-light: var(--text-primary);
   --text-secondary-light: var(--text-secondary);
   --text-primary-dark: var(--text-primary);
@@ -851,96 +816,44 @@ defineExpose({ scrollToEnd, isAtBottom, chatWrapper });
 
 .welcome-container {
   text-align: center;
-  margin: calc(1rem + 15vh) 0 2rem;
+  margin: calc(1rem + 10vh) 0;
   width: 100%;
-  max-width: 640px;
+  max-width: 800px;
   margin-left: auto;
   margin-right: auto;
 }
 
 .welcome-message {
-  font-size: 2rem;
+  font-size: 2.5rem;
   font-weight: 700;
-  color: var(--text-primary);
-  margin: 0 0 1.5rem 0;
-  letter-spacing: -0.03em;
+  color: var(--text-primary-light);
+  margin: 0;
 }
 
-.suggestion-chips {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
-  padding: 0 16px;
-  margin-bottom: 2rem;
-}
-
-.suggestion-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 9px 16px;
-  border-radius: 99px;
-  border: 1px solid var(--border);
-  background: var(--elevated-surface);
-  color: var(--text-secondary);
-  font-size: 0.85rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.18s ease;
-  white-space: nowrap;
-}
-
-.suggestion-chip:hover {
-  background: var(--btn-hover-2);
-  color: var(--primary);
-  border-color: rgba(212, 69, 117, 0.3);
-}
-
-/* Example questions list */
-.example-questions {
-  width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
-  text-align: left;
-}
-
-.example-question {
-  width: 100%;
-  padding: 14px 4px;
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 0.95rem;
-  font-family: inherit;
-  cursor: pointer;
-  text-align: left;
-  transition: color 0.15s ease;
-}
-
-.example-question:hover {
-  color: var(--text-primary);
-}
-
-.example-divider {
-  width: 100%;
-  height: 1px;
-  background: var(--border);
-  opacity: 0.5;
+.dark .welcome-message {
+  color: var(--text-primary-dark);
 }
 
 .incognito-title {
-  font-size: 1.8rem;
-  font-weight: 600;
-  color: var(--text-primary);
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--text-primary-light);
   margin: 0 0 1rem 0;
 }
 
+.dark .incognito-title {
+  color: var(--text-primary-dark);
+}
+
 .incognito-description {
-  font-size: 0.95rem;
-  color: var(--text-secondary);
+  font-size: 1.1rem;
+  color: var(--text-secondary-light);
   margin: 0;
   line-height: 1.6;
+}
+
+.dark .incognito-description {
+  color: var(--text-secondary-dark);
 }
 
 .message {

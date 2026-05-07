@@ -213,7 +213,6 @@ const maxTokens = computed({
   }
 });
 
-
 // Watch for changes in parameter config and save settings
 watch(
   () => props.settingsManager?.settings?.parameter_config,
