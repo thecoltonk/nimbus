@@ -5,7 +5,7 @@ const userId = ref(null);
 const syncEnabled = ref(false);
 const syncing = ref(false);
 
-const USER_ID_KEY = "kira_user_id";
+const USER_ID_KEY = "nimbus_user_id";
 
 /**
  * Cloud sync composable for PostgreSQL-backed chat storage.

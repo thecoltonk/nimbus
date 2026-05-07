@@ -113,7 +113,11 @@ async function fetchModels() {
       const res = await fetch(MODELS_API_URL);
       if (!res.ok) throw new Error(`Failed to fetch models: ${res.status}`);
       const json = await res.json();
-      models.value = (json.data || []).map(normalizeModel);
+      const unique = new Map();
+      for (const m of (json.data || [])) {
+        if (!unique.has(m.id)) unique.set(m.id, m);
+      }
+      models.value = [...unique.values()].map(normalizeModel);
     } catch (e) {
       error.value = e.message;
       console.error('Failed to fetch models:', e);

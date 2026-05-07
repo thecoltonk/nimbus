@@ -1,4 +1,4 @@
--- Kira Chat Database Schema
+-- Nimbus Chat Database Schema
 -- Run this SQL to initialize the database tables
 
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";

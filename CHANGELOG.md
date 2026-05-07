@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Kira are documented here.
+All notable changes to Nimbus are documented here.
 
 ## Change Type Definitions
 
@@ -284,7 +284,7 @@ All notable changes to Kira are documented here.
 ## [0.1.0] - 2025-11-25
 
 ### Added
-- **Initial release** of Kira
+- **Initial release** of Nimbus
 - Chat with multiple AI models
 - Markdown support with syntax highlighting
 - Math equation rendering (LaTeX/KaTeX)

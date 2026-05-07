@@ -1,7 +1,7 @@
-# Kira
+# Nimbus
 
-Kira is a **free, unlimited** AI Chatbot that uses various models through [Hack Club's free API](https://ai.hackclub.com).
-Kira does **not** sell or store user information, and all chat & user data is stored on your device.
+Nimbus is a **free, unlimited** AI Chatbot that uses various models through [Hack Club's free API](https://ai.hackclub.com).
+Nimbus does **not** sell or store user information, and all chat & user data is stored on your device.
 
 ## Features
 

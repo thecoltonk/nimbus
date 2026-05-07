@@ -46,16 +46,16 @@ export function useConversation() {
   // Set up dynamic page title based on conversation
   const title = computed(() => {
     if (conversationTitle.value) {
-      return `${conversationTitle.value} - Kira`;
+      return `${conversationTitle.value} - Nimbus`;
     }
-    return 'Kira';
+    return 'Nimbus';
   });
 
   // Update page head dynamically
   useHead({
     title: title,
     meta: [
-      { name: 'description', content: 'AI conversation in Kira' }
+      { name: 'description', content: 'AI conversation in Nimbus' }
     ]
   });
 

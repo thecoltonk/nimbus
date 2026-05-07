@@ -5,7 +5,7 @@ import { useModels } from './useModels';
 import DEFAULT_PARAMETERS from './defaultParameters';
 
 /**
- * Manages application settings for the Kira Interface.
+ * Manages application settings for the Nimbus Interface.
  */
 class Settings {
   constructor() {
@@ -20,7 +20,7 @@ class Settings {
       // --- User Profile Settings ---
       user_name: null, // User's name
       occupation: null, // User's occupation
-      custom_instructions: null, // Custom instructions for Kira
+      custom_instructions: null, // Custom instructions for Nimbus
 
       // --- Memory Settings ---
       notebook_memory_enabled: false, // Whether Notebook/memory is enabled (new unified setting)

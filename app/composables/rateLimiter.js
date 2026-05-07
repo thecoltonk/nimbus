@@ -10,7 +10,7 @@ import { ref, computed } from 'vue';
 // Rate limit configuration
 const GENERAL_LIMIT = 96;
 const IMAGE_LIMIT = 12;
-const STORAGE_KEY = 'libre_rate_limits';
+const STORAGE_KEY = 'nimbus_rate_limits';
 
 // Image generation model IDs
 const IMAGE_GENERATION_MODELS = [

@@ -134,7 +134,7 @@ function handleChatScroll(event) {
 
 // Update page head dynamically
 useHead({
-  title: () => `${conversationTitle.value || 'Conversation'} - Kira`,
+  title: () => `${conversationTitle.value || 'Conversation'} - Nimbus`,
   meta: [
     { name: 'description', content: 'Chat conversation with the AI assistant' }
   ]

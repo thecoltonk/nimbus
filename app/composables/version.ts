@@ -1,6 +1,6 @@
-// Version information for Kira
+// Version information for Nimbus
 export const APP_VERSION = '0.1.0';
-export const APP_NAME = 'Kira';
+export const APP_NAME = 'Nimbus';
 
 /**
  * Get the current application version

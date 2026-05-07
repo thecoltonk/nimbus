@@ -237,7 +237,7 @@ function openNotebook() {
 
               <div class="setting-item textarea-item">
                 <div class="setting-info">
-                  <h3>What should Kira call you?</h3>
+                  <h3>What should Nimbus call you?</h3>
                   <p>Enter your name</p>
                 </div>
                 <div class="input-container">
@@ -258,7 +258,7 @@ function openNotebook() {
 
               <div class="setting-item textarea-item">
                 <div class="setting-info">
-                  <h3>What custom instructions do you want Kira to follow?</h3>
+                  <h3>What custom instructions do you want Nimbus to follow?</h3>
                   <p>Be precise, be witty, etc.</p>
                 </div>
                 <div class="input-container">
@@ -329,7 +329,7 @@ function openNotebook() {
             <div class="settings-content">
               <div class="content-header">
                 <h2>Keyboard Shortcuts</h2>
-                <p>Master Kira with these shortcuts</p>
+                <p>Master Nimbus with these shortcuts</p>
               </div>
 
               <div class="keybind-group">
@@ -403,11 +403,11 @@ function openNotebook() {
             <div class="settings-content">
               <div class="content-header">
                 <h2>About</h2>
-                <p>Information about Kira</p>
+                <p>Information about Nimbus</p>
               </div>
               <div class="info-section">
                 <p>
-                  Kira is a modern, Nuxt-powered interface designed for seamless AI interactions. 
+                  Nimbus is a modern, Nuxt-powered interface designed for seamless AI interactions. 
                   Built with developers in mind, it offers a customizable experience that adapts to your needs.
                 </p>
                 <p>
@@ -422,7 +422,7 @@ function openNotebook() {
                 </ul>
                 <p>
                   For more information, visit our 
-                  <a href="https://github.com/Mostlime12195/Libre-Assistant" target="_blank" rel="noopener noreferrer">Kira GitHub repository</a>.
+                  <a href="https://github.com/cloudsail/nimbus" target="_blank" rel="noopener noreferrer">Nimbus GitHub repository</a>.
                 </p>
               </div>
             </div>

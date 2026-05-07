@@ -118,6 +118,6 @@ button:hover {
 }
 
 .dark .global-menu-toggle:hover {
-  background: rgba(203, 166, 247, 0.1);
+  background: var(--btn-hover);
 }
 </style>

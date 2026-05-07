@@ -1,6 +1,6 @@
 /**
  * @file message.js
- * @description Core logic for the Kira API Interface, handling Hack Club LLM endpoint configuration
+ * @description Core logic for the Nimbus API Interface, handling Hack Club LLM endpoint configuration
  * and streaming responses using manual fetch() processing.
  * 
  * Tool Calling Architecture (Industry Standard):
@@ -799,7 +799,7 @@ export async function* handleIncomingMessage(
 
     const errorMessage = error.message || "No detailed information";
     yield {
-      content: `\n\n[CRITICAL ERROR: Kira failed to dispatch request. ${errorMessage}]`,
+      content: `\n\n[CRITICAL ERROR: Nimbus failed to dispatch request. ${errorMessage}]`,
       reasoning: null,
       error: true,
       errorDetails: {

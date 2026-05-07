@@ -95,11 +95,11 @@ const settingsInitialTab = ref('general'); // Controls which tab opens in settin
 // Set up dynamic page title
 const title = computed(() => {
   if (route.params.id) {
-    return `${route.params.id} - Kira`;
+    return `${route.params.id} - Nimbus`;
   } else if (route.path === '/' || route.path === '/new') {
-    return 'New Chat - Kira';
+    return 'New Chat - Nimbus';
   } else {
-    return 'Kira';
+    return 'Nimbus';
   }
 });
 

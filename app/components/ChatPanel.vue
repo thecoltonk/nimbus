@@ -618,7 +618,7 @@ defineExpose({ scrollToEnd, isAtBottom, chatWrapper });
         <div v-else class="incognito-welcome">
           <h1 class="incognito-title">Incognito Mode</h1>
           <p class="incognito-description">
-            This chat won't be stored and will not use Kira's memory or personalization features.
+            This chat won't be stored and will not use Nimbus's memory or personalization features.
           </p>
         </div>
       </div>

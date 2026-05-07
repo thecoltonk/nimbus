@@ -84,7 +84,7 @@ function handleNewConversation() {
         <button class="close-button" aria-label="Close sidebar" @click="closeSidebar">
           <Icon icon="material-symbols:side-navigation" width="24" height="24" />
         </button>
-        <span class="sidebar-title">Kira</span>
+        <span class="sidebar-title">Nimbus</span>
         <button class="settings-button" aria-label="Open settings" @click="$emit('openSettings')">
           <Icon icon="material-symbols:settings-outline" width="22" height="22" />
         </button>
@@ -347,7 +347,7 @@ function handleNewConversation() {
 .search-input:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 2px var(--primary-a2, rgba(192, 74, 44, 0.2));
+  box-shadow: 0 0 0 2px var(--focus-ring);
 }
 
 .search-clear {
@@ -548,7 +548,7 @@ function handleNewConversation() {
 }
 
 .dark .conversation-button.active {
-  background: hsla(340, 70%, 55%, 0.12);
+  background: hsla(212, 100%, 70%, 0.1);
   color: var(--primary);
 }
 
@@ -568,7 +568,7 @@ function handleNewConversation() {
 }
 
 .rename-input:focus {
-  box-shadow: 0 0 0 2px var(--primary-a2, rgba(192, 74, 44, 0.2));
+  box-shadow: 0 0 0 2px var(--focus-ring);
 }
 
 /* Menu trigger button (3-dot) */

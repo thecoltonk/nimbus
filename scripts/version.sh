@@ -1,5 +1,5 @@
 #!/bin/bash
-# Version management script for Kira
+# Version management script for Nimbus
 
 set -e
 
