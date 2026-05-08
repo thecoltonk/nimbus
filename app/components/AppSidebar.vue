@@ -10,6 +10,8 @@ import {
 } from "reka-ui";
 import { useConversationsList } from "~/composables/useConversationsList";
 
+const { user, loggedIn } = useUserSession();
+
 const emit = defineEmits([
   "reloadSettings",
   "toggleDark",
@@ -115,14 +117,14 @@ function handleNewConversation() {
           <p>No conversations yet</p>
           <p class="empty-hint">Start a new chat to begin</p>
         </div>
-        
+
         <!-- Empty search results -->
         <div v-else-if="isSearching && !groupedConversations.length" class="empty-state">
           <Icon icon="material-symbols:search" width="48" height="48" />
           <p>No results found</p>
           <p class="empty-hint">Try a different search term</p>
         </div>
-        
+
         <!-- Grouped conversation list -->
         <div v-else class="conversation-list">
           <template v-for="(group, index) in groupedConversations" :key="group.key">
@@ -151,7 +153,7 @@ function handleNewConversation() {
                 />
               </button>
             </div>
-            
+
             <!-- Conversations in this group -->
             <template v-if="group.key !== 'pinned' || isPinnedExpanded">
               <div
@@ -169,7 +171,7 @@ function handleNewConversation() {
                   ref="renameInput"
                   autofocus
                 />
-                
+
                 <!-- Normal conversation button (shown when not renaming) -->
                 <NuxtLink
                   v-else
@@ -179,7 +181,7 @@ function handleNewConversation() {
                 >
                   <span class="conversation-title">{{ data.title }}</span>
                 </NuxtLink>
-                
+
                 <!-- Dropdown Menu -->
                 <DropdownMenuRoot v-if="renamingId !== data.id">
                   <DropdownMenuTrigger class="menu-trigger" @click.stop aria-label="More options">
@@ -209,7 +211,29 @@ function handleNewConversation() {
           </template>
         </div>
       </div>
-      
+
+      <!-- User profile widget anchored to bottom -->
+      <div class="user-profile-widget">
+        <template v-if="loggedIn && user">
+          <img
+            :src="user.avatar"
+            :alt="user.name"
+            class="profile-avatar"
+            referrerpolicy="no-referrer"
+          />
+          <div class="profile-info">
+            <span class="profile-name">{{ user.name }}</span>
+            <span class="profile-badge">Nimbus Pro</span>
+          </div>
+        </template>
+        <template v-else>
+          <a href="/auth/google" class="profile-signin-btn">
+            <Icon icon="flat-color-icons:google" width="18" height="18" />
+            Sign in with Google
+          </a>
+        </template>
+      </div>
+
     </div>
   </div>
 </template>
@@ -345,7 +369,72 @@ function handleNewConversation() {
   flex: 1 1 0;
   overflow-y: auto;
   padding: 0 16px;
-  margin-bottom: 12px;
+  min-height: 0;
+}
+
+/* User profile widget */
+.user-profile-widget {
+  flex-shrink: 0;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-sidebar);
+}
+
+.profile-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid var(--border);
+}
+
+.profile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+}
+
+.profile-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-badge {
+  font-size: 0.6875rem;
+  color: var(--primary);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.profile-signin-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 36px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.profile-signin-btn:hover {
+  background: var(--btn-hover);
 }
 
 /* Empty State */

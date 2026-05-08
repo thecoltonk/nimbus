@@ -6,7 +6,6 @@ import { useDark, useToggle } from "@vueuse/core";
 import { SwitchRoot, SwitchThumb } from "reka-ui";
 import { Icon } from "@iconify/vue";
 import { loadNotebook } from "@/composables/notebook";
-import { getClientId } from "@/composables/useClientId";
 
 // Define props and emits
 const props = defineProps(["isOpen", "initialTab"]);
@@ -66,24 +65,23 @@ const navItems = [
 ];
 
 // --- Usage Tab State ---
-const usageData = ref([]);
-const usageResetAt = ref(null);
-const usageLoading = ref(false);
-const usageLimits = ref({});
+const BUDGET_USD = 0.50;
+const CHART_CIRCUMFERENCE = 2 * Math.PI * 54; // r=54
 
-const PROVIDER_LABELS = {
-  anthropic: 'Anthropic',
-  openai: 'OpenAI',
-  google: 'Google',
-  deepseek: 'DeepSeek',
-  minimax: 'MiniMax',
-  moonshotai: 'Moonshot AI',
-  perplexity: 'Perplexity',
-  qwen: 'Qwen',
-  'x-ai': 'xAI',
-  'z-ai': 'Z.ai',
-  default: 'Other',
-};
+const usageLoading = ref(false);
+const usageResetAt = ref(null);
+const usageUnauthenticated = ref(false);
+const usageSpend = ref(0);
+const usageTotalTokens = ref(0);
+
+const usagePercentage = computed(() => Math.min(100, (usageSpend.value / BUDGET_USD) * 100));
+
+const budgetArcColor = computed(() => {
+  const pct = usagePercentage.value;
+  if (pct > 80) return '#ef4444';
+  if (pct > 60) return '#f59e0b';
+  return 'url(#budgetGradient)';
+});
 
 const resetTimeLocal = computed(() => {
   if (!usageResetAt.value) return null;
@@ -94,13 +92,13 @@ const resetTimeLocal = computed(() => {
 async function loadUsageData() {
   usageLoading.value = true;
   try {
-    const clientId = await getClientId();
-    const resp = await fetch(`/api/usage?clientId=${encodeURIComponent(clientId)}`);
+    const resp = await fetch('/api/usage');
     if (resp.ok) {
       const data = await resp.json();
-      usageData.value = data.usage || [];
+      usageUnauthenticated.value = data.unauthenticated || false;
+      usageSpend.value = data.totalSpend || 0;
+      usageTotalTokens.value = data.totalTokens || 0;
       usageResetAt.value = data.resetAt || null;
-      usageLimits.value = data.limits || {};
     }
   } catch (e) {
     console.error('Failed to load usage data:', e);
@@ -332,7 +330,7 @@ function openNotebook() {
             <div class="settings-content">
               <div class="content-header">
                 <h2>Usage</h2>
-                <p>Daily server API token usage. Resets at midnight UTC.</p>
+                <p>Your global daily AI budget. Resets at midnight UTC.</p>
               </div>
 
               <div v-if="usageLoading" class="usage-loading">
@@ -340,42 +338,86 @@ function openNotebook() {
                 <span>Loading usage data…</span>
               </div>
 
-              <div v-else-if="usageData.length === 0" class="usage-empty">
-                <Icon icon="material-symbols:check-circle-outline" width="32" height="32" class="usage-empty-icon" />
-                <p>No server API usage today.</p>
-                <p class="usage-empty-sub">You're either using your own API key, or haven't made any requests yet.</p>
+              <!-- Not signed in -->
+              <div v-else-if="usageUnauthenticated" class="usage-auth-required">
+                <Icon icon="material-symbols:account-circle-outline" width="48" height="48" class="usage-auth-icon" />
+                <p class="usage-auth-title">Sign in to track usage</p>
+                <p class="usage-auth-sub">Google sign-in is required to use the shared server key and track your daily budget.</p>
+                <a href="/auth/google" class="google-signin-btn">
+                  <Icon icon="flat-color-icons:google" width="18" height="18" />
+                  Sign in with Google
+                </a>
               </div>
 
-              <div v-else class="usage-providers">
-                <div v-for="item in usageData" :key="item.provider" class="usage-provider-card">
-                  <div class="usage-provider-header">
-                    <span class="usage-provider-name">{{ PROVIDER_LABELS[item.provider] || item.provider }}</span>
-                    <span class="usage-provider-pct">{{ Math.round((item.tokensUsed / item.dailyLimit) * 100) }}%</span>
+              <!-- Budget chart -->
+              <div v-else class="usage-budget-section">
+                <div class="budget-chart-wrapper">
+                  <svg class="budget-chart" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                      <linearGradient id="budgetGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#2563eb"/>
+                        <stop offset="100%" stop-color="#7c3aed"/>
+                      </linearGradient>
+                    </defs>
+                    <!-- Track -->
+                    <circle cx="70" cy="70" r="54" fill="none" stroke="var(--border)" stroke-width="12"/>
+                    <!-- Progress arc -->
+                    <circle
+                      cx="70" cy="70" r="54"
+                      fill="none"
+                      :stroke="budgetArcColor"
+                      stroke-width="12"
+                      stroke-linecap="round"
+                      :stroke-dasharray="CHART_CIRCUMFERENCE"
+                      :stroke-dashoffset="CHART_CIRCUMFERENCE * (1 - usagePercentage / 100)"
+                      transform="rotate(-90 70 70)"
+                      style="transition: stroke-dashoffset 0.5s ease, stroke 0.4s ease;"
+                    />
+                  </svg>
+                  <div class="budget-chart-center">
+                    <span class="budget-spent">${{ usageSpend.toFixed(2) }}</span>
+                    <span class="budget-of-limit">of ${{ BUDGET_USD.toFixed(2) }}</span>
                   </div>
-                  <div class="usage-bar-track">
-                    <div
-                      class="usage-bar-fill"
-                      :class="{ 'usage-bar-warn': (item.tokensUsed / item.dailyLimit) > 0.75, 'usage-bar-crit': (item.tokensUsed / item.dailyLimit) > 0.9 }"
-                      :style="{ width: Math.min(100, Math.round((item.tokensUsed / item.dailyLimit) * 100)) + '%' }"
-                    ></div>
+                </div>
+
+                <div
+                  class="budget-pct-label"
+                  :class="{ 'pct-warn': usagePercentage > 60, 'pct-crit': usagePercentage > 80 }"
+                >
+                  {{ Math.round(usagePercentage) }}% used
+                </div>
+
+                <div class="budget-detail-grid">
+                  <div class="budget-detail-item">
+                    <span class="budget-detail-label">Spent today</span>
+                    <span class="budget-detail-value">${{ usageSpend.toFixed(4) }}</span>
                   </div>
-                  <div class="usage-provider-counts">
-                    <span>{{ item.tokensUsed.toLocaleString() }} / {{ item.dailyLimit.toLocaleString() }} tokens</span>
+                  <div class="budget-detail-item">
+                    <span class="budget-detail-label">Remaining</span>
+                    <span class="budget-detail-value">${{ Math.max(0, BUDGET_USD - usageSpend).toFixed(4) }}</span>
+                  </div>
+                  <div class="budget-detail-item">
+                    <span class="budget-detail-label">Daily limit</span>
+                    <span class="budget-detail-value">${{ BUDGET_USD.toFixed(2) }}</span>
+                  </div>
+                  <div class="budget-detail-item">
+                    <span class="budget-detail-label">Est. tokens</span>
+                    <span class="budget-detail-value">{{ usageTotalTokens.toLocaleString() }}</span>
                   </div>
                 </div>
               </div>
 
-              <div v-if="resetTimeLocal" class="usage-reset-row">
+              <div v-if="resetTimeLocal && !usageUnauthenticated && !usageLoading" class="usage-reset-row">
                 <Icon icon="material-symbols:schedule" width="16" height="16" />
                 <span>Resets today at {{ resetTimeLocal }} (your local time)</span>
               </div>
 
-              <div class="usage-note">
+              <div v-if="!usageUnauthenticated && !usageLoading" class="usage-note">
                 <Icon icon="material-symbols:info-outline" width="16" height="16" />
                 <span>Add your own API key in <button class="inline-link" @click="currTab = 'general'">General settings</button> for unlimited usage — get a free key at <strong>ai.hackclub.com</strong>.</span>
               </div>
 
-              <div class="usage-refresh-row">
+              <div v-if="!usageLoading" class="usage-refresh-row">
                 <button class="refresh-btn" @click="loadUsageData" :disabled="usageLoading">
                   <Icon icon="material-symbols:refresh" width="16" height="16" />
                   Refresh
@@ -1229,97 +1271,149 @@ kbd {
   animation: spin 1s linear infinite;
 }
 
-.usage-empty {
+/* Auth required state */
+.usage-auth-required {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   padding: 2.5rem 1rem;
   text-align: center;
 }
 
-.usage-empty-icon {
-  color: var(--primary);
-  opacity: 0.6;
+.usage-auth-icon {
+  color: var(--text-muted);
+  opacity: 0.5;
 }
 
-.usage-empty p {
+.usage-auth-title {
   margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
   color: var(--text-primary);
-  font-size: 0.9375rem;
 }
 
-.usage-empty-sub {
-  color: var(--text-secondary) !important;
-  font-size: 0.8125rem !important;
+.usage-auth-sub {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  max-width: 300px;
+  line-height: 1.5;
 }
 
-.usage-providers {
+.google-signin-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  padding: 0 1.25rem;
+  height: 40px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+
+.google-signin-btn:hover {
+  background: var(--btn-hover);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* Budget chart */
+.usage-budget-section {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 1rem;
   margin-bottom: 1rem;
 }
 
-.usage-provider-card {
-  background: var(--bg-primary);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 1rem 1.25rem;
+.budget-chart-wrapper {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  flex-shrink: 0;
+}
+
+.budget-chart {
+  width: 100%;
+  height: 100%;
+}
+
+.budget-chart-center {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-}
-
-.usage-provider-header {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: center;
+  pointer-events: none;
 }
 
-.usage-provider-name {
+.budget-spent {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+
+.budget-of-limit {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.budget-pct-label {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #6366f1;
+  letter-spacing: -0.01em;
+}
+
+.budget-pct-label.pct-warn {
+  color: #f59e0b;
+}
+
+.budget-pct-label.pct-crit {
+  color: #ef4444;
+}
+
+.budget-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 360px;
+}
+
+.budget-detail-item {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.625rem 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.budget-detail-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.budget-detail-value {
   font-size: 0.9375rem;
   font-weight: 600;
   color: var(--text-primary);
-}
-
-.usage-provider-pct {
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: var(--primary);
-}
-
-.usage-bar-track {
-  width: 100%;
-  height: 8px;
-  background: var(--bg-secondary);
-  border-radius: 99px;
-  overflow: hidden;
-}
-
-.usage-bar-fill {
-  height: 100%;
-  background: linear-gradient(to right, #2563eb, #7c3aed);
-  border-radius: 99px;
-  transition: width 0.4s ease;
-}
-
-.usage-bar-warn .usage-bar-fill,
-.usage-bar-track:has(.usage-bar-warn) {
-  background: linear-gradient(to right, #f59e0b, #d97706);
-}
-
-.usage-bar-fill.usage-bar-warn {
-  background: linear-gradient(to right, #f59e0b, #d97706);
-}
-
-.usage-bar-fill.usage-bar-crit {
-  background: linear-gradient(to right, #ef4444, #dc2626);
-}
-
-.usage-provider-counts {
-  font-size: 0.8125rem;
-  color: var(--text-secondary);
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
 }
 
 .usage-reset-row {
@@ -1328,7 +1422,7 @@ kbd {
   gap: 6px;
   font-size: 0.8125rem;
   color: var(--text-secondary);
-  margin-top: 0.5rem;
+  margin-top: 0.25rem;
   margin-bottom: 1rem;
 }
 

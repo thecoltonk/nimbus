@@ -72,3 +72,8 @@ CREATE TABLE IF NOT EXISTS daily_token_usage (
   UNIQUE (client_id, date, provider)
 );
 CREATE INDEX IF NOT EXISTS idx_daily_token_usage_client_date ON daily_token_usage(client_id, date);
+
+-- Migration: add USD cost tracking and authenticated user email
+ALTER TABLE daily_token_usage ADD COLUMN IF NOT EXISTS user_email VARCHAR(255);
+ALTER TABLE daily_token_usage ADD COLUMN IF NOT EXISTS spend_usd DECIMAL(10,6) NOT NULL DEFAULT 0;
+CREATE INDEX IF NOT EXISTS idx_daily_token_usage_email_date ON daily_token_usage(user_email, date);
