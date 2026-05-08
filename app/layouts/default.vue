@@ -61,6 +61,7 @@ import { availableModels } from '~/composables/availableModels';
 import { useSettings } from '~/composables/useSettings';
 import { useGlobalScrollStatus } from '~/composables/useGlobalScrollStatus';
 import { useGlobalIncognito } from '~/composables/useGlobalIncognito';
+import { emitter } from '~/composables/emitter';
 
 import AppSidebar from '~/components/AppSidebar.vue'
 import SettingsPanel from '~/components/SettingsPanel.vue'
@@ -139,7 +140,14 @@ onMounted(async () => {
   if (typeof window !== 'undefined') {
     sidebarOpen.value = window.innerWidth >= 950;
   }
+
+  // Listen for open-settings events from child components (e.g. rate limit notice)
+  emitter.on('open-settings', (tab = 'general') => {
+    openSettingsPanel(tab);
+  });
 });
+
+// No explicit cleanup needed for the layout since it lives for the app lifetime
 
 function toggleSidebar() {
   sidebarOpen.value = !sidebarOpen.value;

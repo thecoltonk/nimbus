@@ -4,6 +4,7 @@ import { migrateMessages } from "./branchManager";
 import { getSessionToken } from "~/composables/useSession";
 import { useSettings } from "~/composables/useSettings";
 import { deleteChatSummary } from "./chatSummarizer";
+import { getClientId } from "~/composables/useClientId";
 
 /**
  * Serializes a message object for storage, removing Vue reactivity proxies
@@ -93,15 +94,9 @@ async function generateTitleInBackground(conversationId, plainMessages, lastUpda
   const systemPrompt = `You are an AI with the task of shortening and summarising messages into a short title. You must summarise the given messages based on their content into at most a 40 character title. Each conversation is between a user and an AI chatbot. The messages provided to you are the first messages of the conversation. The title must be general enough to apply to what you think the conversation will be about. Only output the title, without any additional explainations or commentary.`;
 
   try {
-    // Load settings to get the API key
     const settings = await localforage.getItem("settings") || {};
     const customApiKey = settings.custom_api_key;
-
-    if (!customApiKey) {
-      console.warn("No API key found in settings, skipping title generation");
-      return;
-    }
-
+    const clientId = await getClientId();
     const sessionToken = await getSessionToken();
     const response = await fetch("/api/ai", {
       method: "POST",
@@ -119,6 +114,7 @@ async function generateTitleInBackground(conversationId, plainMessages, lastUpda
         ],
         model: "z-ai/glm-4.7-flash",
         stream: false,
+        clientId,
         ...(customApiKey && {
           customApiKey: customApiKey,
         }),

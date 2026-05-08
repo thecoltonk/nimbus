@@ -1,6 +1,7 @@
 import { ref, computed, nextTick, onMounted, onUnmounted, toRaw } from 'vue';
 import { useRouter } from 'vue-router';
 import localforage from 'localforage';
+import { useRateLimit } from './useRateLimit';
 import { createConversation as createNewConversation, storeMessages, deleteConversation as deleteConv, updateBranchPath, loadConversation } from './storeConversations';
 import { handleIncomingMessage } from './message';
 import { availableModels, findModelById, normalizeReasoningConfig, getDefaultReasoningEffort } from './availableModels';
@@ -186,17 +187,6 @@ export function useMessagesManager(chatPanel) {
 
     if ((!message.trim() && attachments.length === 0) || isLoading.value) return;
 
-    // Check if API key is provided
-    if (!settingsManager.settings.custom_api_key) {
-      const tempAssistantMsg = createAssistantMessage();
-      updateAssistantMessage(tempAssistantMsg, {
-        content: `⚠️ **API Key Required**\n\nPlease add your own API key in Settings → General to use models.`,
-        complete: true,
-        error: true,
-        errorDetails: { name: 'APIKeyRequired', message: 'API key is required to use models' }
-      });
-      return;
-    }
 
     controller.value = new AbortController();
     isLoading.value = true;
@@ -401,10 +391,26 @@ export function useMessagesManager(chatPanel) {
     } catch (error) {
       console.error('Error in stream processing:', error);
       assistantMsg.error = true;
-      assistantMsg.errorDetails = {
-        name: error.name || 'Error',
-        message: error.message || 'An unexpected error occurred'
-      };
+
+      if (error.status === 429) {
+        const { setRateLimited } = useRateLimit();
+        const resetAt = error.errorData?.resetAt;
+        if (resetAt) setRateLimited(resetAt);
+
+        const resetMsg = error.errorData?.resetAt
+          ? ` The limit resets at ${new Date(error.errorData.resetAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}.`
+          : '';
+        assistantMsg.errorDetails = {
+          name: 'RateLimitExceeded',
+          message: `Daily server usage limit reached.${resetMsg} Add your own API key in Settings → General for unlimited usage (free at ai.hackclub.com).`,
+          status: 429,
+        };
+      } else {
+        assistantMsg.errorDetails = {
+          name: error.name || 'Error',
+          message: error.message || 'An unexpected error occurred'
+        };
+      }
     } finally {
       // Ensure parts are stored from partsBuilder
       syncAssistantMessage(assistantMsg, partsBuilder, true);

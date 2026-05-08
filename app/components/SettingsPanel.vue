@@ -6,6 +6,7 @@ import { useDark, useToggle } from "@vueuse/core";
 import { SwitchRoot, SwitchThumb } from "reka-ui";
 import { Icon } from "@iconify/vue";
 import { loadNotebook } from "@/composables/notebook";
+import { getClientId } from "@/composables/useClientId";
 
 // Define props and emits
 const props = defineProps(["isOpen", "initialTab"]);
@@ -43,6 +44,11 @@ const navItems = [
     icon: "material-symbols:palette"
   },
   {
+    key: "usage",
+    label: "Usage",
+    icon: "material-symbols:data-usage"
+  },
+  {
     key: "notebook",
     label: "Notebook",
     icon: "material-symbols:book"
@@ -58,6 +64,57 @@ const navItems = [
     icon: "material-symbols:info"
   }
 ];
+
+// --- Usage Tab State ---
+const usageData = ref([]);
+const usageResetAt = ref(null);
+const usageLoading = ref(false);
+const usageLimits = ref({});
+
+const PROVIDER_LABELS = {
+  anthropic: 'Anthropic',
+  openai: 'OpenAI',
+  google: 'Google',
+  deepseek: 'DeepSeek',
+  minimax: 'MiniMax',
+  moonshotai: 'Moonshot AI',
+  perplexity: 'Perplexity',
+  qwen: 'Qwen',
+  'x-ai': 'xAI',
+  'z-ai': 'Z.ai',
+  default: 'Other',
+};
+
+const resetTimeLocal = computed(() => {
+  if (!usageResetAt.value) return null;
+  const d = new Date(usageResetAt.value);
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+});
+
+async function loadUsageData() {
+  usageLoading.value = true;
+  try {
+    const clientId = await getClientId();
+    const resp = await fetch(`/api/usage?clientId=${encodeURIComponent(clientId)}`);
+    if (resp.ok) {
+      const data = await resp.json();
+      usageData.value = data.usage || [];
+      usageResetAt.value = data.resetAt || null;
+      usageLimits.value = data.limits || {};
+    }
+  } catch (e) {
+    console.error('Failed to load usage data:', e);
+  } finally {
+    usageLoading.value = false;
+  }
+}
+
+watch(
+  () => currTab.value,
+  (tab) => {
+    if (tab === 'usage') loadUsageData();
+  }
+);
 
 // --- Lifecycle Hooks ---
 onMounted(async () => {
@@ -205,19 +262,19 @@ function openNotebook() {
               </div>
               <div class="setting-item textarea-item">
                 <div class="setting-info">
-                  <h3>API Key</h3>
-                  <p>Enter your own API key to use models</p>
+                  <h3>API Key <span class="optional-badge">Optional</span></h3>
+                  <p>Your own key gives unlimited usage. Leave blank to use the shared server key (subject to daily limits). Get a free API key from <strong>ai.hackclub.com</strong>.</p>
                 </div>
                 <div class="input-container api-key-container">
-                  <input 
-                    v-model="customApiKey" 
-                    :type="showApiKey ? 'text' : 'password'" 
-                    placeholder="Enter your API key"
-                    class="custom-input api-key-input" 
+                  <input
+                    v-model="customApiKey"
+                    :type="showApiKey ? 'text' : 'password'"
+                    placeholder="sk-... (optional)"
+                    class="custom-input api-key-input"
                   />
-                  <button 
-                    type="button" 
-                    class="toggle-visibility-btn" 
+                  <button
+                    type="button"
+                    class="toggle-visibility-btn"
                     @click="showApiKey = !showApiKey"
                     :aria-label="showApiKey ? 'Hide API key' : 'Show API key'"
                   >
@@ -266,6 +323,63 @@ function openNotebook() {
                   <textarea v-model="customInstructions" placeholder="Be precise, be witty, etc."
                     class="custom-textarea" rows="3"></textarea>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Usage Tab -->
+          <div v-show="currTab === 'usage'" class="settings-section">
+            <div class="settings-content">
+              <div class="content-header">
+                <h2>Usage</h2>
+                <p>Daily server API token usage. Resets at midnight UTC.</p>
+              </div>
+
+              <div v-if="usageLoading" class="usage-loading">
+                <Icon icon="material-symbols:refresh" width="20" height="20" class="spin-icon" />
+                <span>Loading usage data…</span>
+              </div>
+
+              <div v-else-if="usageData.length === 0" class="usage-empty">
+                <Icon icon="material-symbols:check-circle-outline" width="32" height="32" class="usage-empty-icon" />
+                <p>No server API usage today.</p>
+                <p class="usage-empty-sub">You're either using your own API key, or haven't made any requests yet.</p>
+              </div>
+
+              <div v-else class="usage-providers">
+                <div v-for="item in usageData" :key="item.provider" class="usage-provider-card">
+                  <div class="usage-provider-header">
+                    <span class="usage-provider-name">{{ PROVIDER_LABELS[item.provider] || item.provider }}</span>
+                    <span class="usage-provider-pct">{{ Math.round((item.tokensUsed / item.dailyLimit) * 100) }}%</span>
+                  </div>
+                  <div class="usage-bar-track">
+                    <div
+                      class="usage-bar-fill"
+                      :class="{ 'usage-bar-warn': (item.tokensUsed / item.dailyLimit) > 0.75, 'usage-bar-crit': (item.tokensUsed / item.dailyLimit) > 0.9 }"
+                      :style="{ width: Math.min(100, Math.round((item.tokensUsed / item.dailyLimit) * 100)) + '%' }"
+                    ></div>
+                  </div>
+                  <div class="usage-provider-counts">
+                    <span>{{ item.tokensUsed.toLocaleString() }} / {{ item.dailyLimit.toLocaleString() }} tokens</span>
+                  </div>
+                </div>
+              </div>
+
+              <div v-if="resetTimeLocal" class="usage-reset-row">
+                <Icon icon="material-symbols:schedule" width="16" height="16" />
+                <span>Resets today at {{ resetTimeLocal }} (your local time)</span>
+              </div>
+
+              <div class="usage-note">
+                <Icon icon="material-symbols:info-outline" width="16" height="16" />
+                <span>Add your own API key in <button class="inline-link" @click="currTab = 'general'">General settings</button> for unlimited usage — get a free key at <strong>ai.hackclub.com</strong>.</span>
+              </div>
+
+              <div class="usage-refresh-row">
+                <button class="refresh-btn" @click="loadUsageData" :disabled="usageLoading">
+                  <Icon icon="material-symbols:refresh" width="16" height="16" />
+                  Refresh
+                </button>
               </div>
             </div>
           </div>
@@ -1080,6 +1194,212 @@ kbd {
   color: var(--text-muted);
   font-weight: 500;
   margin: 0 2px;
+}
+
+/* Optional badge for API key */
+.optional-badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--btn-hover-2);
+  color: var(--text-secondary);
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+/* Usage Tab */
+.usage-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 2rem 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spin-icon {
+  animation: spin 1s linear infinite;
+}
+
+.usage-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 2.5rem 1rem;
+  text-align: center;
+}
+
+.usage-empty-icon {
+  color: var(--primary);
+  opacity: 0.6;
+}
+
+.usage-empty p {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 0.9375rem;
+}
+
+.usage-empty-sub {
+  color: var(--text-secondary) !important;
+  font-size: 0.8125rem !important;
+}
+
+.usage-providers {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.usage-provider-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.usage-provider-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.usage-provider-name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.usage-provider-pct {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.usage-bar-track {
+  width: 100%;
+  height: 8px;
+  background: var(--bg-secondary);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.usage-bar-fill {
+  height: 100%;
+  background: linear-gradient(to right, #2563eb, #7c3aed);
+  border-radius: 99px;
+  transition: width 0.4s ease;
+}
+
+.usage-bar-warn .usage-bar-fill,
+.usage-bar-track:has(.usage-bar-warn) {
+  background: linear-gradient(to right, #f59e0b, #d97706);
+}
+
+.usage-bar-fill.usage-bar-warn {
+  background: linear-gradient(to right, #f59e0b, #d97706);
+}
+
+.usage-bar-fill.usage-bar-crit {
+  background: linear-gradient(to right, #ef4444, #dc2626);
+}
+
+.usage-provider-counts {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.usage-reset-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.usage-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 0.875rem 1rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 1rem;
+}
+
+.usage-note > svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--primary);
+}
+
+.inline-link {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font-size: inherit;
+  font-family: inherit;
+  color: var(--primary);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  border-radius: 0;
+}
+
+.inline-link:hover {
+  background: none;
+  opacity: 0.8;
+}
+
+.usage-refresh-row {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.refresh-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 1rem;
+  height: 34px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.refresh-btn:hover:not(:disabled) {
+  background: var(--btn-hover);
+  color: var(--text-primary);
+}
+
+.refresh-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* Responsive */

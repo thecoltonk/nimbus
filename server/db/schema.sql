@@ -60,3 +60,15 @@ CREATE TABLE IF NOT EXISTS messages (
 
 CREATE INDEX IF NOT EXISTS idx_messages_conversation_id ON messages(conversation_id);
 CREATE INDEX IF NOT EXISTS idx_messages_position ON messages(conversation_id, position);
+
+-- Daily token usage tracking for server-key rate limiting
+CREATE TABLE IF NOT EXISTS daily_token_usage (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  client_id VARCHAR(255) NOT NULL,
+  date DATE NOT NULL DEFAULT CURRENT_DATE,
+  provider VARCHAR(50) NOT NULL DEFAULT 'default',
+  tokens_used INTEGER NOT NULL DEFAULT 0,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (client_id, date, provider)
+);
+CREATE INDEX IF NOT EXISTS idx_daily_token_usage_client_date ON daily_token_usage(client_id, date);

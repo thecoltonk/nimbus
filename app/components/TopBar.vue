@@ -416,3 +416,4 @@ watch(() => [props.sidebarOpen, props.isIncognito], () => {
   /* Ensure icon is visible on primary color */
 }
 </style>
+

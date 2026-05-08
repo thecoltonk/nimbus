@@ -18,6 +18,7 @@ import {
 import { generateSystemPrompt } from "~/composables/systemPrompt";
 import { toolManager } from "~/composables/toolsManager";
 import { getSessionToken } from "~/composables/useSession";
+import { getClientId } from "~/composables/useClientId";
 
 /**
  * Formats a message object for the API, handling multimodal content including:
@@ -528,6 +529,7 @@ export async function* handleIncomingMessage(
         ...(settings.custom_api_key && {
           customApiKey: settings.custom_api_key,
         }),
+        clientId: await getClientId(),
       };
 
       // Add reasoning parameters
@@ -572,9 +574,10 @@ export async function* handleIncomingMessage(
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         const errorMessage = errorData.error?.message || "Unknown error";
-        throw new Error(
-          `API request failed with status ${response.status}: ${errorMessage}`,
-        );
+        const err = new Error(`API request failed with status ${response.status}: ${errorMessage}`);
+        err.status = response.status;
+        err.errorData = errorData.error || {};
+        throw err;
       }
 
       // Process the stream

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, nextTick, toRaw } from "vue";
+import { ref, computed, watch, nextTick, toRaw, onMounted } from "vue";
 import { Icon } from "@iconify/vue";
 import {
   DropdownMenuRoot,
@@ -13,6 +13,8 @@ import {
 import { useWindowSize, onKeyStroke, useMagicKeys } from "@vueuse/core";
 import Logo from "./Logo.vue";
 import BottomSheetModelSelector from "./BottomSheetModelSelector.vue";
+import { useRateLimit } from "~/composables/useRateLimit";
+import { emitter } from "~/composables/emitter";
 import { useAttachments } from "~/composables/useAttachments";
 import { 
   findModelById, 
@@ -39,6 +41,11 @@ const emit = defineEmits([
 ]);
 
 const keys = useMagicKeys();
+
+// Rate limit state
+const { isRateLimited, resetTime: rateLimitResetTime } = useRateLimit();
+const hasCustomApiKey = computed(() => !!props.settingsManager?.settings?.custom_api_key);
+const isSendBlocked = computed(() => isRateLimited.value && !hasCustomApiKey.value);
 
 // Local state for reasoning effort
 const reasoningEffort = ref();
@@ -526,6 +533,12 @@ defineExpose({ setMessage, toggleReasoning, setReasoningEffort, toggleSearch, $e
       @dragleave="handleDragLeave"
       @drop="handleDrop"
     >
+      <!-- Rate limit notice -->
+      <div v-if="isSendBlocked" class="rate-limit-notice">
+        <Icon icon="material-symbols:schedule" width="15" height="15" />
+        <span>Daily server limit reached — resets at {{ rateLimitResetTime }}. <button class="rate-limit-settings-link" @click="emitter.emit('open-settings', 'general')">Add your own API key</button> for unlimited use.</span>
+      </div>
+
       <!-- Attachment error message -->
       <div v-if="attachmentError" class="attachment-error">
         <Icon icon="material-symbols:error-outline" width="16" height="16" />
@@ -718,8 +731,11 @@ defineExpose({ setMessage, toggleReasoning, setReasoningEffort, toggleSearch, $e
             <span class="model-name-truncate">{{ props.selectedModelName }}</span>
           </button>
 
-          <button type="submit" class="action-btn send-btn" :disabled="!trimmedMessage && !isLoading"
-            @click="handleActionClick" :aria-label="isLoading ? 'Stop generation' : 'Send message'">
+          <button type="submit" class="action-btn send-btn"
+            :disabled="(!trimmedMessage && !isLoading) || isSendBlocked"
+            @click="handleActionClick"
+            :aria-label="isLoading ? 'Stop generation' : isSendBlocked ? `Rate limited — resets at ${rateLimitResetTime}` : 'Send message'"
+            :title="isSendBlocked ? `Daily limit reached. Resets at ${rateLimitResetTime}. Add your own API key in Settings for unlimited use.` : undefined">
             <Icon v-if="!isLoading" icon="material-symbols:arrow-upward-rounded" width="22" height="22" />
             <Icon v-else icon="material-symbols:stop-rounded" width="22" height="22" />
           </button>
@@ -972,6 +988,11 @@ defineExpose({ setMessage, toggleReasoning, setReasoningEffort, toggleSearch, $e
   gap: 4px;
 }
 
+.dropdown-scroll-container {
+  max-height: 360px;
+  overflow-y: auto;
+}
+
 .right-actions {
   margin-left: auto;
   display: flex;
@@ -982,6 +1003,50 @@ defineExpose({ setMessage, toggleReasoning, setReasoningEffort, toggleSearch, $e
 /* --- ATTACHMENTS --- */
 .hidden-file-input {
   display: none;
+}
+
+.rate-limit-notice {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  margin-bottom: 6px;
+  background-color: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: 8px;
+  color: #b45309;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.dark .rate-limit-notice {
+  color: #fbbf24;
+  background-color: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.rate-limit-notice > svg {
+  flex-shrink: 0;
+}
+
+.rate-limit-settings-link {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font-size: inherit;
+  font-family: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-weight: 600;
+  border-radius: 0;
+}
+
+.rate-limit-settings-link:hover {
+  background: none;
+  opacity: 0.75;
 }
 
 .attachment-error {
