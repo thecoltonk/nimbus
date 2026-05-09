@@ -629,7 +629,7 @@ defineExpose({ setMessage, toggleReasoning, setReasoningEffort, toggleSearch, $e
               :class="{ 'toggle-enabled': isReasoningEnabled }"
               @click="toggleReasoning"
             >
-              <Icon icon="tabler:brain" width="20" height="20" />
+              <Icon icon="material-symbols:psychology" width="20" height="20" />
               <span class="toggle-label">Reasoning</span>
               <Icon 
                 v-if="isReasoningEnabled" 
@@ -643,7 +643,7 @@ defineExpose({ setMessage, toggleReasoning, setReasoningEffort, toggleSearch, $e
             <!-- Mobile: Reasoning effort submenu (for models with effort options) -->
             <DropdownMenuRoot v-if="isMobile && selectedModel && shouldShowEffortSelector">
               <DropdownMenuTrigger class="popover-toggle-item reasoning-submenu-trigger">
-                <Icon icon="tabler:brain" width="20" height="20" />
+                <Icon icon="material-symbols:psychology" width="20" height="20" />
                 <span class="toggle-label">{{ reasoningEffort.charAt(0).toUpperCase() + reasoningEffort.slice(1) }}</span>
                 <Icon icon="material-symbols:chevron-right" width="18" height="18" class="submenu-arrow" />
               </DropdownMenuTrigger>
@@ -700,7 +700,7 @@ defineExpose({ setMessage, toggleReasoning, setReasoningEffort, toggleSearch, $e
           type="button" class="feature-button reasoning-toggle-btn"
           :class="{ 'reasoning-enabled': isReasoningEnabled }" @click="toggleReasoning"
           :aria-label="isReasoningEnabled ? 'Disable reasoning' : 'Enable reasoning'">
-          <Icon icon="tabler:brain" width="22" height="22" />
+          <Icon icon="material-symbols:psychology" width="22" height="22" />
           <span class="reasoning-label">Reasoning</span>
         </button>
 
@@ -759,14 +759,14 @@ defineExpose({ setMessage, toggleReasoning, setReasoningEffort, toggleSearch, $e
 .input-section {
   /* Stick to the bottom of the scroll container (chat-column) */
   position: sticky;
-  background: var(--bg); 
-  border-radius: 20px 20px 0 0;
+  background: transparent;
+  border-radius: 24px 24px 0 0;
   bottom: 0px;
   width: 100%;
   padding: 0;
   box-sizing: border-box;
   z-index: 10;
-  box-shadow: 0px -5px 15px 10px var(--bg);
+  box-shadow: 0px -16px 32px 12px var(--bg);
 }
 
 .input-area-wrapper {
@@ -774,13 +774,19 @@ defineExpose({ setMessage, toggleReasoning, setReasoningEffort, toggleSearch, $e
   margin-bottom: 8px;
   flex-direction: column;
   background-color: var(--bg-input);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 20px;
   padding: 8px;
   box-shadow: var(--shadow-default);
   position: relative;
   z-index: 10;
   transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.dark .input-area-wrapper {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 8px 32px rgba(0, 0, 0, 0.45);
 }
 
 .input-area-wrapper.drag-over {
@@ -796,6 +802,7 @@ defineExpose({ setMessage, toggleReasoning, setReasoningEffort, toggleSearch, $e
   border: none;
   resize: none;
   color: var(--text-primary);
+  font-family: inherit;
   font-size: 1rem;
   line-height: 1.5;
   min-height: 24px;
@@ -829,15 +836,19 @@ defineExpose({ setMessage, toggleReasoning, setReasoningEffort, toggleSearch, $e
   border-radius: 8px;
   background-color: var(--btn-send-bg);
   color: var(--btn-send-text);
+  box-shadow: var(--send-btn-glow);
   flex-shrink: 0;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
 }
 
 .send-btn:hover:not(:disabled) {
   background-color: var(--btn-send-hover-bg);
+  box-shadow: var(--send-btn-glow);
 }
 
 .send-btn:disabled {
   background-color: var(--btn-send-disabled-bg);
+  box-shadow: none;
   cursor: not-allowed;
   transform: none;
 }
@@ -1328,5 +1339,23 @@ defineExpose({ setMessage, toggleReasoning, setReasoningEffort, toggleSearch, $e
 
 .attachment-popover .reasoning-effort-dropdown .reasoning-effort-item.selected:hover {
   background: var(--btn-hover);
+}
+
+/* Dark mode: dim inactive feature-button icons for consistent hierarchy */
+.dark .feature-button:not(.search-enabled):not(.reasoning-enabled) {
+  color: rgba(255, 255, 255, 0.45);
+  transition: all 0.2s ease;
+}
+
+.dark .feature-button:not(.search-enabled):not(.reasoning-enabled):hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.dark .attachment-btn {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.dark .attachment-btn:hover:not(:disabled) {
+  color: rgba(255, 255, 255, 0.9);
 }
 </style>

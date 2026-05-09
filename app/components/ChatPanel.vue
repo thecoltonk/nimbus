@@ -900,6 +900,7 @@ defineExpose({ scrollToEnd, isAtBottom, chatWrapper });
 .message.user .bubble {
   background: var(--bubble-user-bg);
   color: var(--bubble-user-text);
+  font-family: inherit;
   white-space: pre-wrap;
   border-bottom-right-radius: 4px;
   margin-left: auto;

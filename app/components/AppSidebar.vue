@@ -248,12 +248,18 @@ function handleNewConversation() {
   max-width: 90vw;
   z-index: 1001;
   background: var(--bg-sidebar);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
   color: var(--text-primary);
   border-right: 1px solid var(--border);
   transform: translateX(-100%);
   transition: transform 0.3s cubic-bezier(.4, 1, .6, 1);
   display: flex;
   flex-direction: column;
+}
+
+.dark .sidebar {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 4px 0 32px rgba(0, 0, 0, 0.5);
 }
 
 .sidebar.active {
@@ -380,7 +386,7 @@ function handleNewConversation() {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: var(--bg-sidebar);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .profile-avatar {
@@ -656,7 +662,7 @@ function handleNewConversation() {
   border-radius: 8px;
   height: 36px;
   width: 36px;
-  transition: background 0.18s;
+  transition: background 0.18s, color 0.18s;
   flex-shrink: 0;
   padding: 0;
   background: none;
@@ -683,12 +689,22 @@ function handleNewConversation() {
   justify-content: center;
   padding: 0;
   margin: 0;
-  transition: background 0.18s;
+  transition: background 0.18s, color 0.18s;
   flex-shrink: 0;
 }
 
 .close-button:hover {
   background: var(--btn-hover);
+}
+
+.dark .close-button,
+.dark .settings-button {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.dark .close-button:hover,
+.dark .settings-button:hover {
+  color: rgba(255, 255, 255, 0.9);
 }
 
 @media (min-width: 950px) {
@@ -706,11 +722,7 @@ function handleNewConversation() {
     position: fixed;
     width: 80vw;
     max-width: 340px;
-    box-shadow: 4px 0 24px #0002;
-  }
-
-  .dark .sidebar {
-    box-shadow: 4px 0 24px #0004;
+    box-shadow: 4px 0 32px rgba(0, 0, 0, 0.5);
   }
 }
 

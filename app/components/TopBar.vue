@@ -342,7 +342,9 @@ watch(() => [props.sidebarOpen, props.isIncognito], () => {
   position: sticky;
   top: 0;
   height: 60px;
-  background-color: var(--bg);
+  background-color: var(--bg-topbar);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
   width: 100%;
   z-index: 100;
   flex-shrink: 0;
@@ -352,6 +354,10 @@ watch(() => [props.sidebarOpen, props.isIncognito], () => {
 
 .top-bar.with-border {
   border-bottom: 1px solid var(--border);
+}
+
+.dark .top-bar {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 4px 20px rgba(0, 0, 0, 0.35);
 }
 
 .top-bar-content {
@@ -411,9 +417,28 @@ watch(() => [props.sidebarOpen, props.isIncognito], () => {
 .action-toggle:active:not(.parameter-config-toggle),
 .action-toggle.active:not(.parameter-config-toggle) {
   background-color: var(--primary);
-  /* Use primary color when enabled */
   color: var(--primary-foreground);
-  /* Ensure icon is visible on primary color */
+}
+
+/* Dark mode: dim inactive nav icons so only active elements pop */
+.dark .sidebar-toggle,
+.dark .new-chat-btn {
+  color: rgba(255, 255, 255, 0.45);
+  transition: background 0.18s, color 0.18s;
+}
+
+.dark .sidebar-toggle:hover,
+.dark .new-chat-btn:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.dark .action-toggle:not(.active) {
+  color: rgba(255, 255, 255, 0.45);
+  transition: background 0.18s, color 0.18s;
+}
+
+.dark .action-toggle:not(.active):hover {
+  color: rgba(255, 255, 255, 0.9);
 }
 </style>
 
